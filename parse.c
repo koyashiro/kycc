@@ -53,8 +53,13 @@ Token *tokenize(void) {
       continue;
     }
 
-    if (strchr("+-*/()<>", *p)) {
+    if (strchr("+-*/()<>=;", *p)) {
       cur = new_token(TK_RESERVED, cur, p++, 1);
+      continue;
+    }
+
+    if ('a' <= *p && *p <= 'z') {
+      cur = new_token(TK_IDENT, cur, p++, 1);
       continue;
     }
 
@@ -81,6 +86,14 @@ bool consume(char *op) {
     return false;
   token = token->next;
   return true;
+}
+
+Token *consume_ident(void) {
+  if (token->kind != TK_IDENT)
+    return NULL;
+  Token *tok = token;
+  token = token->next;
+  return tok;
 }
 
 void expect(char *op) {
@@ -119,8 +132,33 @@ Node *new_num(int val) {
   return node;
 }
 
-// expr = equality
-Node *expr(void) { return equality(); }
+Node *code[100];
+
+// program = stmt*
+void program(void) {
+  int i = 0;
+  while (!at_eol())
+    code[i++] = stmt();
+  code[i] = NULL;
+}
+
+// stmt = expr ";"
+Node *stmt(void) {
+  Node *node = expr();
+  expect(";");
+  return node;
+}
+
+// expr = assign
+Node *expr(void) { return assign(); }
+
+// assign = equality ("=" assign)?
+Node *assign() {
+  Node *node = equality();
+  if (consume("="))
+    node = new_binary(ND_ASSIGN, node, assign());
+  return node;
+}
 
 // equality = relational ("==" relational | "!=" relational)*
 Node *equality(void) {
@@ -192,11 +230,19 @@ Node *unary(void) {
   return primary();
 }
 
-// primary = "(" expr ")" | num
+// primary = num | ident | "(" expr ")"
 Node *primary(void) {
   if (consume("(")) {
     Node *node = expr();
     expect(")");
+    return node;
+  }
+
+  Token *tok = consume_ident();
+  if (tok) {
+    Node *node = calloc(1, sizeof(Node));
+    node->kind = ND_LVAR;
+    node->offset = (tok->str[0] - 'a' + 1);
     return node;
   }
 
