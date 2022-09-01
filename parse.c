@@ -71,6 +71,12 @@ Token *tokenize(void) {
       continue;
     }
 
+    if (strncmp(p, "return", 6) == 0 && !is_ident1(p[6])) {
+      cur = new_token(TK_RESERVED, cur, p, 6);
+      p += 6;
+      continue;
+    }
+
     if (is_ident1(*p)) {
       char *start = p;
       do {
@@ -161,9 +167,18 @@ void program(void) {
   code[i] = NULL;
 }
 
-// stmt = expr ";"
+// stmt = expr ";" | "return" expr ";"
 Node *stmt(void) {
-  Node *node = expr();
+  Node *node;
+
+  if (consume("return")) {
+    node = calloc(1, sizeof(Node));
+    node->kind = ND_RETURN;
+    node->lhs = expr();
+  } else {
+    node = expr();
+  }
+
   expect(";");
   return node;
 }
