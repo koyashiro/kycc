@@ -25,9 +25,19 @@ struct Token {
   int len;
 };
 
+typedef struct LVar LVar;
+struct LVar {
+  LVar *next;
+  char *name;
+  int len;
+  int offset;
+};
+
 extern char *user_input;
 
 extern Token *token;
+
+extern LVar *locals;
 
 void error(char *fmt, ...);
 void error_at(char *loc, char *fmt, ...);
@@ -42,6 +52,8 @@ bool at_eol(void);
 Token *new_token(TokenKind kind, Token *cur, char *str, int len);
 
 bool startswith(char *p, char *q);
+
+LVar *find_lvar(Token *tok);
 
 Token *tokenize(void);
 
@@ -89,6 +101,6 @@ Node *primary(void);
 // codegen.c
 //
 
-void gen_lval(Node *node); 
+void gen_lval(Node *node);
 
 void gen(Node *node);
