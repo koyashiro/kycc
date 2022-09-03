@@ -6,7 +6,7 @@
 #include <string.h>
 
 //
-// parse.c
+// tokenize.c
 //
 
 typedef enum {
@@ -36,27 +36,17 @@ struct LVar {
 
 extern char *user_input;
 
-extern Token *token;
-
-extern LVar *locals;
-
 void error(char *fmt, ...);
 void error_at(char *loc, char *fmt, ...);
-
-bool consume(char *op);
-Token *consume_ident(void);
-void expect(char *op);
-int expect_number(void);
-
-bool at_eol(void);
-
-Token *new_token(TokenKind kind, Token *cur, char *str, int len);
-
 bool startswith(char *p, char *q);
-
-LVar *find_lvar(Token *tok);
-
+bool is_ident1(char c);
+bool is_ident2(char c);
+Token *new_token(TokenKind kind, Token *cur, char *str, int len);
 Token *tokenize(void);
+
+//
+// parse.c
+//
 
 typedef enum {
   ND_ADD,    // +
@@ -82,12 +72,19 @@ struct Node {
   int offset;
 };
 
+extern Token *token;
+extern LVar *locals;
+extern Node *code[100];
+
+LVar *find_lvar(Token *tok);
+bool consume(char *op);
+Token *consume_ident(void);
+void expect(char *op);
+int expect_number(void);
+bool at_eol(void);
 Node *new_node(NodeKind kind);
 Node *new_binary(NodeKind kind, Node *lhs, Node *rhs);
 Node *new_num(int val);
-
-extern Node *code[100];
-
 void program(void);
 Node *stmt(void);
 Node *expr(void);
