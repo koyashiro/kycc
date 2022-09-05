@@ -81,7 +81,7 @@ void gen(Node *node) {
     printf("  movzb rax, al\n");
     break;
   default:
-    error("unreachable\n");
+    error("unreachable: Node { kind: %s }\n", node->kind);
   }
 
   printf("  push rax\n");
